@@ -65,51 +65,6 @@ class StudentFeatures(BaseModel):
     science_score: float = Field(..., ge=0, le=100, description="Science score (0-100)")
     english_score: float = Field(..., ge=0, le=100, description="English score (0-100)")
     
-    @field_validator('gender')
-    def validate_gender(cls, v):
-        if v not in ['male', 'female', 'other']:
-            raise ValueError('Gender must be male, female, or other')
-        return v
-    
-    @field_validator('school_type')
-    def validate_school_type(cls, v):
-        if v not in ['public', 'private']:
-            raise ValueError('School type must be public or private')
-        return v
-    
-    @field_validator('parent_education')
-    def validate_parent_education(cls, v):
-        valid = ['no formal', 'high school', 'diploma', 'graduate', 'post graduate', 'phd']
-        if v not in valid:
-            raise ValueError(f'Parent education must be one of: {valid}')
-        return v
-    
-    @field_validator('internet_access')
-    def validate_internet(cls, v):
-        if v not in ['yes', 'no']:
-            raise ValueError('Internet access must be yes or no')
-        return v
-    
-    @field_validator('travel_time')
-    def validate_travel_time(cls, v):
-        valid = ['<15 min', '15-30 min', '30-60 min', '>60 min']
-        if v not in valid:
-            raise ValueError(f'Travel time must be one of: {valid}')
-        return v
-    
-    @field_validator('extra_activities')
-    def validate_extra_activities(cls, v):
-        if v not in ['yes', 'no']:
-            raise ValueError('Extra activities must be yes or no')
-        return v
-    
-    @field_validator('study_method')
-    def validate_study_method(cls, v):
-        valid = ['notes', 'textbook', 'group study', 'coaching', 'online videos', 'mixed']
-        if v not in valid:
-            raise ValueError(f'Study method must be one of: {valid}')
-        return v
-    
     class Config:
         schema_extra = {
             "example": {
@@ -134,7 +89,7 @@ class PredictionResponse(BaseModel):
     predicted_grade: str
     predicted_grade_numeric: int
     confidence_scores: Dict[str, float]
-    performance_level: str  # Changed from risk_level
+    risk_level: str
     recommendation: str
     prediction_timestamp: str
 
@@ -155,17 +110,17 @@ def create_features(df):
     df['attendance_score'] = df['attendance_percentage'] / 100
     return df
 
-def get_performance_level(grade):
-    """Get performance level based on predicted grade"""
-    performance_map = {
-        'f': ('Critical', 'Immediate intervention required - critical academic support needed'),
-        'e': ('Needs Improvement', 'Urgent intervention needed - consider tutoring and counseling'),
-        'd': ('Developing', 'Needs improvement - regular monitoring and support recommended'),
-        'c': ('Satisfactory', 'Satisfactory performance - continue current efforts'),
-        'b': ('Good', 'Good performance - maintain good study habits'),
-        'a': ('Excellent', 'Outstanding performance - consider advanced programs')
+def get_risk_level(grade):
+    """Get risk level based on predicted grade"""
+    risk_map = {
+        'f': ('High Risk', 'Immediate intervention required - critical academic support needed'),
+        'e': ('High Risk', 'Urgent intervention needed - consider tutoring and counseling'),
+        'd': ('Medium Risk', 'Needs improvement - regular monitoring and support recommended'),
+        'c': ('Low Risk', 'Satisfactory performance - continue current efforts'),
+        'b': ('Very Low Risk', 'Good performance - maintain good study habits'),
+        'a': ('Very Low Risk', 'Outstanding performance - consider advanced programs')
     }
-    return performance_map.get(grade, ('Unknown', ''))
+    return risk_map.get(grade, ('Unknown', ''))
 
 # API Endpoints
 @app.get("/")
@@ -235,8 +190,8 @@ async def predict(student: StudentFeatures):
         grade_names = preprocessor['label_encoders']['final_grade'].classes_
         predicted_grade = grade_names[pred_class]
         
-        # Get performance level and recommendation
-        performance_level, recommendation = get_performance_level(predicted_grade)
+        # Get risk level and recommendation
+        risk_level, recommendation = get_risk_level(predicted_grade)
         
         # Confidence scores
         confidence_scores = {grade_names[i].upper(): float(pred_proba[i]) for i in range(len(grade_names))}
@@ -245,7 +200,7 @@ async def predict(student: StudentFeatures):
             predicted_grade=predicted_grade.upper(),
             predicted_grade_numeric=int(pred_class),
             confidence_scores=confidence_scores,
-            performance_level=performance_level,
+            risk_level=risk_level,
             recommendation=recommendation,
             prediction_timestamp=datetime.now().isoformat()
         )
@@ -282,7 +237,7 @@ async def predict_batch(request: BatchPredictionRequest):
             
             grade_names = preprocessor['label_encoders']['final_grade'].classes_
             predicted_grade = grade_names[pred_class]
-            performance_level, recommendation = get_performance_level(predicted_grade)
+            risk_level, recommendation = get_risk_level(predicted_grade)
             
             confidence_scores = {grade_names[i].upper(): float(pred_proba[i]) for i in range(len(grade_names))}
             
@@ -291,7 +246,7 @@ async def predict_batch(request: BatchPredictionRequest):
                 predicted_grade=predicted_grade.upper(),
                 predicted_grade_numeric=int(pred_class),
                 confidence_scores=confidence_scores,
-                performance_level=performance_level,
+                risk_level=risk_level,
                 recommendation=recommendation,
                 prediction_timestamp=datetime.now().isoformat()
             ))

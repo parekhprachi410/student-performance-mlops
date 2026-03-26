@@ -42,7 +42,7 @@ def test_predict():
             result = response.json()
             print(f"\n✅ Prediction Successful!")
             print(f"🎯 Predicted Grade: {result['predicted_grade']}")
-            print(f"📊 Performance Level: {result['performance_level']}")
+            print(f"⚠️ Risk Level: {result['risk_level']}")
             print(f"💡 Recommendation: {result['recommendation']}")
             print(f"\n📈 Confidence Scores:")
             for grade, score in result['confidence_scores'].items():
@@ -103,7 +103,7 @@ def test_batch_predict():
             result = response.json()
             print(f"\n✅ Batch Prediction Successful!")
             print(f"Total Processed: {result['total_processed']}")
-            print(f"\n📊 Performance Distribution:")
+            print(f"\n📊 Risk Distribution:")
             for grade, count in result['summary'].items():
                 if count > 0:
                     print(f"   {grade.upper()}: {count} student(s)")
@@ -111,7 +111,7 @@ def test_batch_predict():
             print(f"\n🎯 First Student Details:")
             first = result['predictions'][0]
             print(f"   Grade: {first['predicted_grade']}")
-            print(f"   Performance: {first['performance_level']}")
+            print(f"   Risk: {first['risk_level']}")
             return True
         else:
             print(f"\n❌ Batch Prediction Failed: {response.status_code}")
