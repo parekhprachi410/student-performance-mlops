@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Performance Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { text-align: center; }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            color: #333;
+            border-radius: 5px;
+            display: none;
+        }
+        .grade {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .confidence {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .risk {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Student Performance Predictor</h1>
+        <form id="predictionForm">
+            <div class="form-group">
+                <label>Age (14-19):</label>
+                <input type="number" id="age" value="16" min="14" max="19" required>
+            </div>
+            <div class="form-group">
+                <label>Gender:</label>
+                <select id="gender">
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>School Type:</label>
+                <select id="school_type">
+                    <option value="private">Private</option>
+                    <option value="public">Public</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Parent Education:</label>
+                <select id="parent_education">
+                    <option value="no formal">No Formal</option>
+                    <option value="high school">High School</option>
+                    <option value="diploma">Diploma</option>
+                    <option value="graduate">Graduate</option>
+                    <option value="post graduate">Post Graduate</option>
+                    <option value="phd">PhD</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Study Hours (0-24):</label>
+                <input type="number" id="study_hours" value="5.5" step="0.5" min="0" max="24" required>
+            </div>
+            <div class="form-group">
+                <label>Attendance Percentage (0-100):</label>
+                <input type="number" id="attendance" value="85" min="0" max="100" required>
+            </div>
+            <div class="form-group">
+                <label>Math Score (0-100):</label>
+                <input type="number" id="math_score" value="75" min="0" max="100" required>
+            </div>
+            <div class="form-group">
+                <label>Science Score (0-100):</label>
+                <input type="number" id="science_score" value="80" min="0" max="100" required>
+            </div>
+            <div class="form-group">
+                <label>English Score (0-100):</label>
+                <input type="number" id="english_score" value="85" min="0" max="100" required>
+            </div>
+            <button type="submit">Predict Grade</button>
+        </form>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const student = {
+                age: parseInt(document.getElementById('age').value),
+                gender: document.getElementById('gender').value,
+                school_type: document.getElementById('school_type').value,
+                parent_education: document.getElementById('parent_education').value,
+                study_hours: parseFloat(document.getElementById('study_hours').value),
+                attendance_percentage: parseFloat(document.getElementById('attendance').value),
+                internet_access: "yes",
+                travel_time: "15-30 min",
+                extra_activities: "yes",
+                study_method: "notes",
+                math_score: parseFloat(document.getElementById('math_score').value),
+                science_score: parseFloat(document.getElementById('science_score').value),
+                english_score: parseFloat(document.getElementById('english_score').value)
+            };
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(student)
+                });
+                const result = await response.json();
+                
+                const gradeColors = {
+                    'A': '#4CAF50',
+                    'B': '#2196F3',
+                    'C': '#FFC107',
+                    'D': '#FF9800',
+                    'E': '#F44336',
+                    'F': '#9C27B0'
+                };
+                
+                document.getElementById('result').innerHTML = `
+                    <div class="grade" style="color: ${gradeColors[result.predicted_grade] || '#333'}">
+                        Predicted Grade: ${result.predicted_grade}
+                    </div>
+                    <div class="risk">Risk Level: ${result.risk_level}</div>
+                    <div class="confidence">
+                        Confidence: ${Math.max(...Object.values(result.confidence_scores)).toFixed(1)}%
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>Recommendation:</strong><br>
+                        ${result.recommendation}
+                    </div>
+                `;
+                document.getElementById('result').style.display = 'block';
+            } catch (error) {
+                alert('Error making prediction: ' + error);
+            }
+        };
+    </script>
+</body>
+</html>

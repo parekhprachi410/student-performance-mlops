@@ -1,0 +1,43 @@
+
+data:
+  raw_path: "data/raw/Student_Performance.csv"
+  processed_path: "data/processed/cleaned_data.csv"
+  train_path: "data/processed/train_data.csv"
+  test_path: "data/processed/test_data.csv"
+
+model:
+  random_seed: 42
+  test_size: 0.2
+  val_size: 0.1
+  
+
+features:
+  categorical:
+    - gender
+    - school_type
+    - parent_education
+    - internet_access
+    - travel_time
+    - extra_activities
+    - study_method
+  numerical:
+    - age
+    - study_hours
+    - attendance_percentage
+    - math_score
+    - science_score
+    - english_score
+  target: final_grade
+
+
+mlflow:
+  experiment_name: "student_performance"
+  tracking_uri: "mlruns"
+  
+
+training:
+  algorithms:
+    - random_forest
+    - xgboost
+  n_trials: 30
+  cv_folds: 5
