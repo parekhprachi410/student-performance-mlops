@@ -2,29 +2,26 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8000
-ENV MODEL_PATH=models/artifacts/best_model.pkl
-ENV PREPROCESSOR_PATH=models/artifacts/preprocessor.pkl
-
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Copy requirements first (for better caching)
 COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application
+# Copy the rest of the application
 COPY . .
 
-# Create directories
-RUN mkdir -p models/artifacts data/raw
+# Create necessary directories
+RUN mkdir -p models/artifacts data/raw logs
 
-# Expose port
-EXPOSE ${PORT}
+# Expose the port
+EXPOSE 8000
 
-# Run the API
-CMD uvicorn src.api.app:app --host 0.0.0.0 --port ${PORT}
+# Command to run the API
+CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

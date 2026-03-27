@@ -33,4 +33,3 @@ setuptools>=65.0.0
 wheel>=0.38.0
 requests>=2.31.0
 python-multipart>=0.0.6
-echo "python-dotenv>=1.0.0"
