@@ -7,6 +7,9 @@ import numpy as np
 import joblib
 import os
 from datetime import datetime
+import sys
+sys.path.append('.')
+from src.config import config
 
 # Initialize FastAPI
 app = FastAPI(
@@ -15,18 +18,20 @@ app = FastAPI(
     version="1.0.0"
 )
 
+print(f"Starting API in {config.ENVIRONMENT} mode on port {config.PORT}")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config.CORS_ORIGINS if config.CORS_ORIGINS != ['*'] else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Load models and preprocessor
-MODEL_PATH = 'models/artifacts/best_model.pkl'
-PREPROCESSOR_PATH = 'models/artifacts/preprocessor.pkl'
+MODEL_PATH = config.MODEL_PATH
+PREPROCESSOR_PATH = config.PREPROCESSOR_PATH
 
 model = None
 preprocessor = None
